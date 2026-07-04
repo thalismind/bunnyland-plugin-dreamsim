@@ -1,7 +1,6 @@
 # Bunnyland Dreamsim
 
-Out-of-tree [Bunnyland](https://github.com/thalismind/bunnyland-server) plugin that adds a
-Sims-4-expansion-sized **sleep & dreams** pack. It builds *on top of* the core sleeping
+Out-of-tree [Bunnyland](https://github.com/thalismind/bunnyland-server) plugin that adds an expansion-pack-sized **sleep & dreams** pack. It builds *on top of* the core sleeping
 model (`SleepingComponent`, the `sleep`/`wake` verbs) rather than replacing it: while a
 character is asleep, this plugin composes a dream and grades their rest.
 
