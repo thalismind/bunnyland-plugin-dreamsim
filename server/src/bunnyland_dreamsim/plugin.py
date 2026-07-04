@@ -15,7 +15,7 @@ from .events import DreamComposedEvent, NightmareEvent
 from .fragments import dreamsim_fragments
 from .install import install_dreamsim
 
-PLUGIN_ID = "bunnyland_dreamsim"
+PLUGIN_ID = "bunnyland.dreamsim"
 
 
 def plugin() -> Plugin:

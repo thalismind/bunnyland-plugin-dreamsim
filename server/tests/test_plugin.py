@@ -14,7 +14,7 @@ from bunnyland_dreamsim.plugin import PLUGIN_ID
 
 def test_plugin_loads_with_module_qualified_id():
     plugins = load_modules(["bunnyland_dreamsim"])
-    assert [p.id for p in plugins] == [f"bunnyland_dreamsim.{PLUGIN_ID}"]
+    assert [p.id for p in plugins] == [PLUGIN_ID]
 
 
 def test_plugin_declares_its_contributions():
@@ -27,7 +27,7 @@ def test_plugin_declares_its_contributions():
 def test_plugin_applies_and_registers_events():
     actor = WorldActor()
     applied = apply_plugins(load_modules(["bunnyland_dreamsim"]), actor)
-    assert applied[0].id == f"bunnyland_dreamsim.{PLUGIN_ID}"
+    assert applied[0].id == PLUGIN_ID
 
 
 def test_install_registers_two_consequences():
