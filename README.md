@@ -8,7 +8,7 @@ Everything is assembled **deterministically** from the sleeper's own state — r
 memories, mood (`AffectComponent`), and the room around the bed — so it runs fully offline
 with no LLM or network call. Given the same world and epoch you always get the same dream.
 
-Four mechanics ship out of the box:
+The mechanics that ship out of the box:
 
 - **Dream on sleep** — a per-tick consequence detects sleeping characters and, on a
   cadence, composes a `DreamComponent` woven from their recent memories, mood, and room.
@@ -22,8 +22,32 @@ Four mechanics ship out of the box:
 - **Sleep quality** — a `RestQualityComponent` derived from the `BedComponent` in the room
   plus room safety. Better rest means better recovery, and on waking a prompt fragment
   surfaces the remembered dream ("You wake from a dream of ...").
+- **Recurring dreams & motifs** — every dream reinforces a *motif*: a subject the sleeper's
+  dreams keep returning to, tracked as its own entity linked by a `DreamsOf` typed edge.
+  A subject that surfaces on enough nights becomes a **recurring dream** (`RecurringDreamEvent`),
+  and surfaces in the sleeper's own prompt.
+- **Foreshadowing** — a *recurring nightmare* is an omen: when the core storyteller is
+  running, the sleeper's dread folds a little extra threat into its incident budget
+  (`DreamOmenEvent`), so a coming incident is quietly pulled nearer. Standalone, the omen
+  stays purely narrative.
+
+### Cross-pack tone (optional, no hard dependency)
+
+Dreams read the sleeper's own recent **memories** — where other packs already record the
+day's events — and let them tilt the night: a remembered fright (a cryptid sighting, a
+haunting) drags an otherwise-safe night into a themed nightmare, while a remembered
+celebration (a festival, a feast) sweetens it. This works through the shared memory store,
+so no partner pack is required. When the **specter pack** is installed, a sleeper whose
+*sanity* has frayed additionally carries that dread into the night. All of this is soft: the
+pack is complete and delightful on its own.
 
 This repo intentionally keeps all dream work outside the main `bunnyland-server` repo.
+
+## Verbs
+
+- **`recall-dreams`** — reflect on the dreams that keep returning to you. A private, free
+  reflection that surfaces your *recurring* dream motifs (and flags whether any is a
+  nightmare). Rejects with "you have no recurring dreams to recall" when nothing recurs yet.
 
 ## Layout
 
@@ -35,13 +59,22 @@ This repo intentionally keeps all dream work outside the main `bunnyland-server`
 
 The plugin exposes `bunnyland_dreamsim.bunnyland_plugins()` and contributes:
 
-- `DreamComponent`, `RestQualityComponent`, `BedComponent` - dream, rest, and furniture.
+- `DreamComponent`, `RestQualityComponent`, `BedComponent`, `MotifComponent` - dream, rest,
+  furniture, and a recurring-dream motif.
+- `DreamsOf` - a typed edge linking a dreamer to each motif their dreams return to.
 - `DreamConsequence` - composes a deterministic dream for each sleeping character on a
-  cadence, records it as a memory, and shifts mood for nightmares vs. pleasant dreams.
+  cadence, records it as a memory, reinforces its motif, shifts mood, and foreshadows the
+  storyteller on a recurring nightmare.
 - `RestQualityConsequence` - grades each sleeper's rest from their bed and room safety.
-- `dreamsim_fragments` - renders the dreaming/remembered-dream and rest state into prompts.
-- `DreamComposedEvent`, `NightmareEvent` - domain events for other systems to react to.
+- `RecallDreamsHandler` - the `recall-dreams` verb (private reflection on recurring dreams).
+- `dreamsim_fragments` - renders the dreaming/remembered-dream, rest, and recurring-dream
+  state into prompts.
+- `DreamComposedEvent`, `NightmareEvent`, `RecurringDreamEvent`, `DreamOmenEvent`,
+  `DreamsRecalledEvent` - domain events for other systems to react to.
 - `spawn_bed` - spawn factory for a comfortable bed.
+
+Optional synergy is declared in `DependencyContribution.recommends` (`bunnyland.spectersim`)
+and consumed only through a guarded import, so the pack still runs standalone.
 
 ## Running
 

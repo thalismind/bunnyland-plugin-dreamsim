@@ -83,6 +83,18 @@ def test_consequence_ignores_awake_characters():
     assert not character.has_component(RestQualityComponent)
 
 
+def test_consequence_ignores_sleeping_non_characters():
+    actor = WorldActor()
+    room = _room(actor.world)
+    critter = spawn_entity(actor.world, [IdentityComponent(name="log", kind="thing")])
+    room.add_relationship(Contains(mode=ContainmentMode.ROOM_CONTENT), critter.id)
+    replace_component(critter, SleepingComponent(started_at_epoch=0))
+
+    RestQualityConsequence().process(actor.world, EPOCH)
+
+    assert not critter.has_component(RestQualityComponent)
+
+
 def test_consequence_is_idempotent_within_a_tick():
     actor = WorldActor()
     room = _room(actor.world)

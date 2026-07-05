@@ -14,6 +14,7 @@ from bunnyland.prompts.context import ComponentPromptContext
 from relics import Entity, World
 
 from .components import DreamComponent, RestQualityComponent
+from .motifs import recurring_motifs
 
 #: Components rendered for the viewer, in the order their lines should appear.
 _SELF_COMPONENTS = (RestQualityComponent, DreamComponent)
@@ -25,6 +26,11 @@ def dreamsim_fragments(world: World, character: Entity) -> list[str]:
     for component_type in _SELF_COMPONENTS:
         if character.has_component(component_type):
             lines.extend(character.get_component(component_type).prompt_fragments(ctx))
+    # Recurring dreams surface after the current dream — a private, self-only reflection on
+    # the subjects this sleeper's dreams keep returning to.
+    for motif in recurring_motifs(world, character):
+        article = "nightmare" if motif.is_nightmare else "dream"
+        lines.append(f"A recurring {article} keeps returning to you: {motif.subject}.")
     # Dedupe while preserving the dream's narrative order.
     return list(dict.fromkeys(lines))
 

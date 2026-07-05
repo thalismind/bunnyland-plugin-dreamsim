@@ -16,17 +16,29 @@ It builds *on top of* the core sleep model; it never puts anyone to sleep or wak
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from bunnyland.core import CharacterComponent, MemoryProfileComponent, SleepingComponent
 from bunnyland.core.components import AffectComponent, AffectDelta, ThoughtComponent
 from bunnyland.core.ecs import replace_component, spawn_entity
 from bunnyland.core.edges import HasThought
 from bunnyland.core.events import DomainEvent, event_base
+from bunnyland.memory import MemoryEntry
 from relics import Entity, World
 
 from .components import PLEASANT, DreamComponent
 from .composer import DreamHook, compose_dream
 from .conditions import assess_sleep
-from .events import DreamComposedEvent, NightmareEvent
+from .connectors import cross_pack_signal
+from .events import (
+    DreamComposedEvent,
+    DreamOmenEvent,
+    NightmareEvent,
+    RecurringDreamEvent,
+)
+from .foreshadow import foreshadow_storyteller
+from .motifs import RECURRENCE_THRESHOLD, reinforce_motif
+from .sanity import dread_subject
 
 #: A character must be asleep at least this many epochs before their first dream forms.
 DREAM_ONSET = 300
@@ -85,14 +97,18 @@ class DreamConsequence:
         sleeping = character.get_component(SleepingComponent)
         conditions = assess_sleep(world, character)
         collection = self._collection(character)
-        memories = self._recent_memories(collection)
+        entries = self._recent_entries(collection)
+        memories = [entry.text for entry in entries][:MEMORY_SAMPLE]
+        signal = self._signal(character, entries)
         affect = (
             character.get_component(AffectComponent).current
             if character.has_component(AffectComponent)
             else None
         )
         seed_key = f"{character.id}:{sleeping.started_at_epoch}:{epoch}"
-        draft = compose_dream(conditions, memories, affect, seed_key, hook=self.hook)
+        draft = compose_dream(
+            conditions, memories, affect, seed_key, hook=self.hook, signal=signal
+        )
 
         replace_component(
             character,
@@ -128,6 +144,51 @@ class DreamConsequence:
                     omen=draft.omen,
                 )
             )
+        events.extend(self._reinforce(world, epoch, character, draft.summary, draft.kind))
+        return events
+
+    def _signal(self, character: Entity, entries: list[MemoryEntry]):
+        """Fold cross-pack memory tone and (optionally) specter dread into one tone hint."""
+        signal = cross_pack_signal(entries)
+        if not signal.dread_subject:
+            dread = dread_subject(character)
+            if dread:
+                signal = replace(signal, dread_subject=dread)
+        return signal
+
+    def _reinforce(
+        self, world: World, epoch: int, character: Entity, subject: str, kind: str
+    ) -> list[DomainEvent]:
+        """Strengthen the dream's motif and emit recurring-dream / omen events as it grows.
+
+        A motif that has just crossed the recurrence threshold announces itself with a
+        :class:`RecurringDreamEvent`; a *recurring nightmare* additionally foreshadows
+        storyteller pressure every night it returns, emitting a :class:`DreamOmenEvent`.
+        """
+        motif = reinforce_motif(world, character, subject, kind, epoch).component
+        character_id = str(character.id)
+        events: list[DomainEvent] = []
+        if motif.occurrences == RECURRENCE_THRESHOLD:
+            events.append(
+                RecurringDreamEvent(
+                    **event_base(epoch, actor_id=character_id),
+                    character_id=character_id,
+                    kind=motif.kind,
+                    subject=motif.subject,
+                    occurrences=motif.occurrences,
+                )
+            )
+        if motif.recurring and motif.is_nightmare:
+            foreshadows = foreshadow_storyteller(world)
+            events.append(
+                DreamOmenEvent(
+                    **event_base(epoch, actor_id=character_id),
+                    character_id=character_id,
+                    subject=motif.subject,
+                    occurrences=motif.occurrences,
+                    foreshadows=foreshadows,
+                )
+            )
         return events
 
     def _collection(self, character: Entity) -> str | None:
@@ -135,13 +196,12 @@ class DreamConsequence:
             return None
         return character.get_component(MemoryProfileComponent).vector_collection
 
-    def _recent_memories(self, collection: str | None) -> list[str]:
+    def _recent_entries(self, collection: str | None) -> list[MemoryEntry]:
         if self.store is None or collection is None:
             return []
         entries = self.store.search(collection, mode="recent", limit=MEMORY_SAMPLE + 5)
         # Exclude the plugin's own dream notes so dreams do not feed on themselves.
-        texts = [entry.text for entry in entries if entry.source != "dream"]
-        return texts[:MEMORY_SAMPLE]
+        return [entry for entry in entries if entry.source != "dream"]
 
     def _record_memory(self, collection: str | None, text: str, kind: str, epoch: int) -> None:
         if self.store is None or collection is None or not text:

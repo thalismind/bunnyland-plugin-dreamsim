@@ -100,6 +100,19 @@ def test_awake_non_character_and_character_gating():
     assert not awake.has_component(DreamComponent)
 
 
+def test_a_sleeping_non_character_is_skipped():
+    actor = WorldActor()
+    room = _room(actor.world)
+    # a sleeping entity with no CharacterComponent (e.g. a dozing object) never dreams
+    critter = spawn_entity(actor.world, [IdentityComponent(name="log", kind="thing")])
+    room.add_relationship(Contains(mode=ContainmentMode.ROOM_CONTENT), critter.id)
+    replace_component(critter, SleepingComponent(started_at_epoch=0))
+
+    DreamConsequence(onset=0).process(actor.world, EPOCH)
+
+    assert not critter.has_component(DreamComponent)
+
+
 def test_dream_persists_after_waking_for_recall():
     actor = WorldActor()
     room = _room(actor.world)

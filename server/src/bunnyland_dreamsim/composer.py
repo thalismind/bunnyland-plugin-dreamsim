@@ -20,6 +20,7 @@ from bunnyland.core.components import AffectVector
 
 from .components import NIGHTMARE, PLEASANT
 from .conditions import SleepConditions
+from .connectors import CrossPackSignal
 
 #: Pleasant dream templates, keyed on a ``{subject}`` phrase.
 PLEASANT_TEMPLATES = (
@@ -95,17 +96,30 @@ def compose_dream(
     seed_key: str,
     *,
     hook: DreamHook | None = None,
+    signal: CrossPackSignal | None = None,
 ) -> DreamDraft:
     """Assemble a :class:`DreamDraft` from the sleeper's state.
 
     ``memories`` is ordered newest-first. A pleasant dream draws its subject from the most
     relevant memory and can resurface an *older* one as an insight; a nightmare fixates on
     the room's threat (or, lacking one, a recent memory twisted dark).
+
+    An optional cross-pack ``signal`` (see :mod:`bunnyland_dreamsim.connectors`) tilts the
+    dream: a remembered fright invades even a safe night as a themed nightmare, while a
+    remembered celebration sweetens a night that is not otherwise dangerous.
     """
     seed = _seed_int(seed_key)
     mood = _mood_word(affect)
     memory_texts = [text for text in memories if text.strip()]
 
+    if signal is not None and signal.dread_subject:
+        return _nightmare(
+            conditions, memory_texts, mood, seed, hook, forced_subject=signal.dread_subject
+        )
+    if signal is not None and signal.sweet_subject and not conditions.dangerous:
+        return _pleasant(
+            conditions, memory_texts, mood, seed, hook, forced_subject=signal.sweet_subject
+        )
     if conditions.dangerous:
         return _nightmare(conditions, memory_texts, mood, seed, hook)
     return _pleasant(conditions, memory_texts, mood, seed, hook)
@@ -135,8 +149,12 @@ def _nightmare(
     mood: str,
     seed: int,
     hook: DreamHook | None,
+    forced_subject: str = "",
 ) -> DreamDraft:
-    if conditions.has_threat:
+    if forced_subject:
+        subject = forced_subject
+        omen = OMEN_TEMPLATES[seed % len(OMEN_TEMPLATES)].format(threat=forced_subject)
+    elif conditions.has_threat:
         subject = f"the {conditions.threat}"
         omen = OMEN_TEMPLATES[seed % len(OMEN_TEMPLATES)].format(threat=f"the {conditions.threat}")
     elif memories:
@@ -163,13 +181,20 @@ def _pleasant(
     mood: str,
     seed: int,
     hook: DreamHook | None,
+    forced_subject: str = "",
 ) -> DreamDraft:
     # Insight: a pleasant dream draws its subject from a newer memory and can resurface the
     # *oldest* of the recent set (memories are newest-first) as a distinct older memory. To
     # keep subject and insight from ever being the same memory, the subject is chosen from all
-    # but the last (oldest) entry whenever there are two or more.
+    # but the last (oldest) entry whenever there are two or more. A ``forced_subject`` (a
+    # cross-pack celebration) becomes the subject directly while still resurfacing the oldest
+    # memory as an insight when there is one to spare.
     based_on = ""
-    if not memories:
+    if forced_subject:
+        subject = forced_subject
+        if len(memories) >= 2:
+            based_on = memories[-1].strip()
+    elif not memories:
         subject = f"the {conditions.room_title}"
     elif len(memories) == 1:
         subject = _phrase(memories[0])

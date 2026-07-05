@@ -16,9 +16,11 @@ from bunnyland.prompts.context import ComponentPromptContext, PromptPerspective
 from bunnyland_dreamsim import (
     NIGHTMARE,
     PLEASANT,
+    RECURRENCE_THRESHOLD,
     DreamComponent,
     RestQualityComponent,
     dreamsim_fragments,
+    reinforce_motif,
 )
 
 
@@ -101,6 +103,15 @@ def test_rest_quality_line_shows_while_asleep():
     assert "You are resting deeply and well." in lines
 
 
+def test_light_rest_line():
+    actor = WorldActor()
+    character = _character(actor.world)
+    _asleep(character)
+    replace_component(character, RestQualityComponent(quality=0.5))
+
+    assert "You are resting lightly." in dreamsim_fragments(actor.world, character)
+
+
 def test_poor_rest_line():
     actor = WorldActor()
     character = _character(actor.world)
@@ -121,6 +132,25 @@ def test_rest_quality_is_hidden_while_awake():
 def test_no_dream_or_rest_yields_no_lines():
     actor = WorldActor()
     character = _character(actor.world)
+
+    assert dreamsim_fragments(actor.world, character) == []
+
+
+def test_recurring_dream_surfaces_in_the_viewers_fragments():
+    actor = WorldActor()
+    character = _character(actor.world)
+    for epoch in range(RECURRENCE_THRESHOLD):
+        reinforce_motif(actor.world, character, "the wraith", NIGHTMARE, epoch=epoch)
+
+    lines = dreamsim_fragments(actor.world, character)
+
+    assert "A recurring nightmare keeps returning to you: the wraith." in lines
+
+
+def test_non_recurring_motifs_stay_out_of_the_fragments():
+    actor = WorldActor()
+    character = _character(actor.world)
+    reinforce_motif(actor.world, character, "a fleeting thought", PLEASANT, epoch=1)
 
     assert dreamsim_fragments(actor.world, character) == []
 
