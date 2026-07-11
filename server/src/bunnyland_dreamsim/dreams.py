@@ -106,9 +106,7 @@ class DreamConsequence:
             else None
         )
         seed_key = f"{character.id}:{sleeping.started_at_epoch}:{epoch}"
-        draft = compose_dream(
-            conditions, memories, affect, seed_key, hook=self.hook, signal=signal
-        )
+        draft = compose_dream(conditions, memories, affect, seed_key, hook=self.hook, signal=signal)
 
         replace_component(
             character,

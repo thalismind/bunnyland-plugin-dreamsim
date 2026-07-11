@@ -41,9 +41,7 @@ def test_sleeping_character_reads_present_tense_dream():
     actor = WorldActor()
     character = _character(actor.world)
     _asleep(character)
-    replace_component(
-        character, DreamComponent(summary="a walk by the river", kind=PLEASANT)
-    )
+    replace_component(character, DreamComponent(summary="a walk by the river", kind=PLEASANT))
 
     lines = dreamsim_fragments(actor.world, character)
 
@@ -64,9 +62,7 @@ def test_sleeping_character_reads_a_nightmare_line():
 def test_woken_character_recalls_the_dream():
     actor = WorldActor()
     character = _character(actor.world)  # not asleep
-    replace_component(
-        character, DreamComponent(summary="a walk by the river", kind=PLEASANT)
-    )
+    replace_component(character, DreamComponent(summary="a walk by the river", kind=PLEASANT))
 
     lines = dreamsim_fragments(actor.world, character)
 

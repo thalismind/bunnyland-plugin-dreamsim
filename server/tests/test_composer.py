@@ -94,9 +94,7 @@ def test_each_affect_dimension_has_its_own_mood_word():
 
 def test_a_dream_of_a_blank_forced_subject_condenses_to_a_placeholder():
     # a nightmare from an all-whitespace memory (dark, no threat) falls back gracefully
-    draft = compose_dream(
-        SleepConditions(room_title="Cellar", dark=True), ["   "], None, "c_1:0:1"
-    )
+    draft = compose_dream(SleepConditions(room_title="Cellar", dark=True), ["   "], None, "c_1:0:1")
     assert draft.summary == "a formless dread"
 
 

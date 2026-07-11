@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from bunnyland.core import WorldActor, spawn_entity
-from bunnyland.mechanics.storyteller import StorytellerComponent, ThreatPointsComponent
+from bunnyland.foundation.storyteller.mechanics import StorytellerComponent, ThreatPointsComponent
 
 from bunnyland_dreamsim import FORESHADOW_THREAT_POINTS, foreshadow_storyteller
 
@@ -16,9 +16,7 @@ def test_no_storyteller_means_the_omen_is_narrative_only(caplog):
 
 def test_a_running_storyteller_gains_threat_from_the_omen():
     actor = WorldActor()
-    teller = spawn_entity(
-        actor.world, [StorytellerComponent(), ThreatPointsComponent(points=2.0)]
-    )
+    teller = spawn_entity(actor.world, [StorytellerComponent(), ThreatPointsComponent(points=2.0)])
 
     nudged = foreshadow_storyteller(actor.world)
 

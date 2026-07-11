@@ -12,7 +12,7 @@ from bunnyland.core import (
     spawn_entity,
 )
 from bunnyland.core.ecs import replace_component
-from bunnyland.mechanics.storyteller import StorytellerComponent, ThreatPointsComponent
+from bunnyland.foundation.storyteller.mechanics import StorytellerComponent, ThreatPointsComponent
 from bunnyland.memory import InMemoryStore
 
 from bunnyland_dreamsim import (

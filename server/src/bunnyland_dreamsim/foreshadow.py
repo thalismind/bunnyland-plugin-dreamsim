@@ -15,7 +15,7 @@ import logging
 from dataclasses import replace
 
 from bunnyland.core.ecs import replace_component
-from bunnyland.mechanics.storyteller import StorytellerComponent, ThreatPointsComponent
+from bunnyland.foundation.storyteller.mechanics import StorytellerComponent, ThreatPointsComponent
 from relics import World
 
 LOG = logging.getLogger(__name__)
@@ -24,9 +24,7 @@ LOG = logging.getLogger(__name__)
 FORESHADOW_THREAT_POINTS = 3.0
 
 
-def foreshadow_storyteller(
-    world: World, points: float = FORESHADOW_THREAT_POINTS
-) -> bool:
+def foreshadow_storyteller(world: World, points: float = FORESHADOW_THREAT_POINTS) -> bool:
     """Nudge every running storyteller's threat budget upward; return whether any was nudged.
 
     Returns ``False`` (and logs a warning that the synergy is off) when the world has no
