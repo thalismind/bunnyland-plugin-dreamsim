@@ -15,6 +15,7 @@ from bunnyland_dreamsim import (
     dreamsim_fragments,
 )
 from bunnyland_dreamsim.commands import RECALL_DREAMS
+from bunnyland_dreamsim.integration_3d import install_dreamsim_3d
 from bunnyland_dreamsim.plugin import PLUGIN_ID, plugin
 from bunnyland_dreamsim.plugin import bunnyland_plugins as _plugins
 
@@ -48,6 +49,8 @@ def test_plugin_recommends_the_specter_pack_softly():
     plugin = _plugins()[0]
     assert "bunnyland.spectersim" in plugin.dependencies.recommends
     assert plugin.dependencies.requires == ()
+    assert plugin.dependencies.integrates_with == ("bunnyland.3d",)
+    assert plugin.runtime.integration_factories == (install_dreamsim_3d,)
 
 
 def test_plugin_applies_and_registers_events():

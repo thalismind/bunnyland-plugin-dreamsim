@@ -22,6 +22,7 @@ from .events import (
 )
 from .fragments import dreamsim_fragments
 from .install import install_dreamsim
+from .integration_3d import install_dreamsim_3d
 from .motifs import DreamsOf, MotifComponent
 
 PLUGIN_ID = "bunnyland.dreamsim"
@@ -36,7 +37,9 @@ def plugin() -> Plugin:
         # Optional synergy: when the specter pack is loaded, a frayed sleeper's dread
         # darkens their dreams. Consumed via a guarded import (see :mod:`.sanity`); dreamsim
         # still runs standalone, so this is a soft recommend, never a hard requirement.
-        dependencies=DependencyContribution(recommends=("bunnyland.spectersim",)),
+        dependencies=DependencyContribution(
+            recommends=("bunnyland.spectersim",), integrates_with=("bunnyland.3d",)
+        ),
         ecs=EcsContribution(
             components=(
                 DreamComponent,
@@ -57,7 +60,10 @@ def plugin() -> Plugin:
                 DreamsRecalledEvent,
             ),
         ),
-        runtime=RuntimeContribution(service_factories=(install_dreamsim,)),
+        runtime=RuntimeContribution(
+            service_factories=(install_dreamsim,),
+            integration_factories=(install_dreamsim_3d,),
+        ),
         content=ContentContribution(
             prompt_fragments=(dreamsim_fragments,),
         ),
