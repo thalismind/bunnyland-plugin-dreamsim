@@ -9,8 +9,14 @@ actor's own motifs. It rejects cleanly when the sleeper has nothing recurring ye
 
 from __future__ import annotations
 
-from bunnyland.core.actions import ActionDefinition, ActionExample, ActionRequirement
-from bunnyland.core.commands import CommandCost, Lane, SubmittedCommand
+from bunnyland.core.actions import (
+    ActionDefinition,
+    ActionEffort,
+    ActionExample,
+    ActionRequirement,
+    effort_cost,
+)
+from bunnyland.core.commands import Lane, SubmittedCommand
 from bunnyland.core.events import event_base
 from bunnyland.core.handlers import (
     HandlerContext,
@@ -57,8 +63,8 @@ def recall_dreams_action() -> ActionDefinition:
         title="Recall Dreams",
         description="Reflect on the dreams that keep returning to you.",
         icon="moon",
-        lane=Lane.WORLD,
-        cost=CommandCost(action=1),
+        lane=Lane.FOCUS,
+        cost=effort_cost(focus=ActionEffort.ROUTINE),
         arguments={},
         examples=(ActionExample(text="recall-dreams"),),
         requirement=ActionRequirement(character_edges=("DreamsOf",)),

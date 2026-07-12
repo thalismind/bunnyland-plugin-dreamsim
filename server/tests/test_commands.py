@@ -93,5 +93,7 @@ def test_recall_rejects_an_invalid_character():
 def test_recall_action_definition_is_registered_metadata():
     action = recall_dreams_action()
     assert action.command_type == RECALL_DREAMS
-    assert action.lane == Lane.WORLD
+    assert action.lane == Lane.FOCUS
+    assert action.cost.focus == 1
+    assert action.cost.action == 0
     assert action.requirement.character_edges == ("DreamsOf",)
