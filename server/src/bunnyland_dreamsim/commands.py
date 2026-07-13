@@ -21,10 +21,11 @@ from bunnyland.core.events import event_base
 from bunnyland.core.handlers import (
     HandlerContext,
     HandlerResult,
-    ok,
+    planned,
     rejected,
     require_character,
 )
+from bunnyland.core.mutations import MutationPlan
 
 from .events import DreamsRecalledEvent
 from .motifs import recurring_motifs
@@ -46,7 +47,8 @@ class RecallDreamsHandler:
         if not motifs:
             return rejected("you have no recurring dreams to recall")
         character_id = str(actor_id)
-        return ok(
+        return planned(
+            MutationPlan(),
             DreamsRecalledEvent(
                 **event_base(ctx.epoch, actor_id=character_id),
                 character_id=character_id,
